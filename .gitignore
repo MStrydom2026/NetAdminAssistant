@@ -1,0 +1,53 @@
+.gitignore
+# Dependencies
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Database
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+error.log
+warn.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+
+# Build
+dist/
+build/
+.next/
+.nuxt/
+
+# Misc
+.tmp/
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# Extension specific
+extension/icons/*.png
+*.crx
+*.pem
