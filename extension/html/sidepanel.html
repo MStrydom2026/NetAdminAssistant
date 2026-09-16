@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NetAdmin Assistant - Analysis</title>
+  <link rel="stylesheet" href="../styles/common.css">
+  <link rel="stylesheet" href="../styles/sidepanel.css">
+</head>
+<body>
+  <div class="container">
+    <header class="sticky-header">
+      <h1>NetAdmin Analysis</h1>
+      <div class="header-actions">
+        <button id="analyzeBtn" class="btn btn-small btn-primary" title="Analyze current ticket">
+          🔍 Analyze
+        </button>
+        <button id="clearCacheBtn" class="btn btn-small btn-ghost" title="Clear cached results">
+          🗑️ Clear Cache
+        </button>
+      </div>
+    </header>
+
+    <div id="results" class="analysis-container">
+      <div class="empty-state">
+        <p>Click "Analyze" to start analyzing the current ticket.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="../sidepanel.js"></script>
+</body>
+</html>
