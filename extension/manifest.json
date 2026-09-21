@@ -1,45 +1,22 @@
 {
   "manifest_version": 3,
-  "name": "NetAdmin Assistant - Sage 300 Support Helper",
-  "version": "0.5.4",
-  "description": "AI-powered ticket analyzer for Sage 300 support. Analyzes NetAdmin tickets and suggests solutions.",
+  "name": "NetAdmin Test",
+  "version": "0.6.0",
+  "description": "Local testing build of NetAdmin Assistant.",
   "author": "MStrydom2026",
-  "permissions": [
-    "storage",
-    "tabs",
-    "scripting",
-    "webRequest"
-  ],
+  "permissions": ["storage", "tabs", "scripting", "webRequest", "sidePanel"],
   "host_permissions": [
     "https://netadmin.sage.co.za/*",
     "https://*.sage.co.za/*",
+    "http://127.0.0.1:3000/*",
     "http://localhost:3000/*"
   ],
-  "action": {
-    "default_popup": "html/popup.html",
-    "default_title": "NetAdmin Assistant"
-  },
-  "side_panel": {
-    "default_path": "html/sidepanel.html",
-    "default_title": "NetAdmin Analysis"
-  },
-  "background": {
-    "service_worker": "background.js"
-  },
-  "content_scripts": [
-    {
-      "matches": [
-        "https://netadmin.sage.co.za/*",
-        "https://*.sage.co.za/*"
-      ],
-      "js": ["content.js"],
-      "run_at": "document_end"
-    }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": ["html/sidepanel.html"],
-      "matches": ["<all_urls>"]
-    }
-  ]
+  "action": { "default_popup": "html/popup.html", "default_title": "NetAdmin Test" },
+  "side_panel": { "default_path": "html/sidepanel.html", "default_title": "NetAdmin Test" },
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [{
+    "matches": ["https://netadmin.sage.co.za/*", "https://*.sage.co.za/*"],
+    "js": ["content.js"],
+    "run_at": "document_end"
+  }]
 }

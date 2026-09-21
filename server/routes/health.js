@@ -8,12 +8,46 @@ router.get('/', (req, res) => {
   try {
     const databaseConnected = db.getInstance() !== null;
     const aiConfigured = isAIConfigured();
-    res.status(databaseConnected ? 200 : 503).json({ status: databaseConnected ? 'healthy' : 'unhealthy', service: 'NetAdmin Assistant Backend', version: '0.5.4', timestamp: new Date().toISOString(), database: databaseConnected ? 'connected' : 'disconnected', aiProvider: config.aiProvider, aiConfigured, aiMessage: aiConfigured ? 'AI provider configured' : `Set the credentials for ${config.aiProvider} in server/.env and restart the server`, features: config.features });
+    const healthy = databaseConnected;
+    res.status(healthy ? 200 : 503).json({
+      status: healthy ? 'healthy' : 'unhealthy',
+      service: 'NetAdmin Test Backend',
+      version: '0.6.0-test',
+      host: config.host,
+      port: config.port,
+      aiProvider: config.aiProvider,
+      aiConfigured,
+      aiMessage: aiConfigured ? 'AI provider configured' : 'AI provider is not configured',
+      databaseConnected,
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
     logger.error('Health check failed:', error.message);
     res.status(503).json({ status: 'error', error: error.message, timestamp: new Date().toISOString() });
   }
 });
-router.get('/detailed', (req, res) => res.json({ status: 'healthy', service: 'NetAdmin Assistant Backend', version: '0.5.4', timestamp: new Date().toISOString(), configuration: { environment: config.nodeEnv, aiProvider: config.aiProvider, aiConfigured: isAIConfigured(), databasePath: config.db.path, logLevel: config.logLevel }, features: config.features, uptime: process.uptime() }));
-router.get('/ready', (req, res) => { const ready = db.getInstance() !== null && isAIConfigured(); res.status(ready ? 200 : 503).json({ ready, timestamp: new Date().toISOString(), reason: ready ? 'Ready to accept requests' : 'Database or AI provider is not configured' }); });
+
+router.get('/ready', (req, res) => {
+  const ready = db.getInstance() !== null && isAIConfigured();
+  res.status(ready ? 200 : 503).json({ ready, aiConfigured: isAIConfigured(), timestamp: new Date().toISOString() });
+});
+
+router.get('/detailed', (req, res) => {
+  res.json({
+    status: 'healthy',
+    service: 'NetAdmin Test Backend',
+    version: '0.6.0-test',
+    configuration: {
+      environment: config.nodeEnv,
+      host: config.host,
+      port: config.port,
+      aiProvider: config.aiProvider,
+      aiConfigured: isAIConfigured(),
+      openAIBaseURL: config.aiProvider === 'openai' ? config.openai.baseURL : undefined,
+      model: config.aiProvider === 'openai' ? config.openai.model : undefined
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
 module.exports = router;
