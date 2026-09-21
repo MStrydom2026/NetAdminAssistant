@@ -2,15 +2,29 @@ const API_BASE_URL = 'http://127.0.0.1:3000';
 const CACHE_DURATION = 24 * 60 * 60 * 1000;
 
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.local.set({ apiUrl: API_BASE_URL, analysisCache: {}, settings: { autoAnalyze: true, showConfidence: true, cacheEnabled: true, maxCacheAge: CACHE_DURATION } });
+  chrome.storage.local.set({
+    apiUrl: API_BASE_URL,
+    analysisCache: {},
+    settings: { autoAnalyze: true, showConfidence: true, cacheEnabled: true, maxCacheAge: CACHE_DURATION }
+  });
   checkBackendHealth();
 });
 
+async function fetchBackendStatus() {
+  const health = await fetch(`${API_BASE_URL}/health`);
+  if (health.ok) return { response: health, data: await health.json(), endpoint: '/health' };
+
+  // The server currently running from netadmin-ai-helper exposes its status at `/`.
+  const root = await fetch(`${API_BASE_URL}/`);
+  const data = await root.json();
+  if (!root.ok || data.status !== 'ok') throw new Error(`Backend returned HTTP ${root.status}`);
+  return { response: root, data, endpoint: '/' };
+}
+
 async function checkBackendHealth() {
   try {
-    const response = await fetch(`${API_BASE_URL}/health`);
-    const data = await response.json();
-    chrome.storage.local.set({ backendStatus: response.ok ? 'healthy' : 'unhealthy', backendHealth: data });
+    const { data } = await fetchBackendStatus();
+    chrome.storage.local.set({ backendStatus: 'healthy', backendHealth: data });
   } catch (error) {
     chrome.storage.local.set({ backendStatus: 'unavailable', backendHealth: { error: error.message } });
   }
@@ -35,7 +49,10 @@ async function handleAnalyze(data, sendResponse) {
   try {
     const cached = await getCachedAnalysis(data.ticketId);
     if (cached) return sendResponse({ success: true, data: cached, fromCache: true });
-    const response = await fetch(`${API_BASE_URL}/api/analyze`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...data, attachments: data.attachments || [] }) });
+    const response = await fetch(`${API_BASE_URL}/api/analyze`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...data, attachments: data.attachments || [] })
+    });
     const result = await response.json();
     if (!response.ok || !result.success) throw new Error(result.error || `API error: ${response.status}`);
     await cacheAnalysis(data.ticketId, result);
@@ -44,14 +61,26 @@ async function handleAnalyze(data, sendResponse) {
 }
 
 async function handleGetHistory({ limit = 20, offset = 0 }, sendResponse) {
-  try { const response = await fetch(`${API_BASE_URL}/api/history/tickets?limit=${limit}&offset=${offset}`); sendResponse({ success: response.ok, data: await response.json() }); }
-  catch (error) { sendResponse({ success: false, error: error.message }); }
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/history/tickets?limit=${limit}&offset=${offset}`);
+    sendResponse({ success: response.ok, data: await response.json() });
+  } catch (error) { sendResponse({ success: false, error: error.message }); }
 }
 
 function cacheAnalysis(ticketId, result) {
-  return new Promise(resolve => chrome.storage.local.get('analysisCache', data => { const cache = data.analysisCache || {}; cache[ticketId] = { data: result, timestamp: Date.now() }; chrome.storage.local.set({ analysisCache: cache }, resolve); }));
+  return new Promise(resolve => chrome.storage.local.get('analysisCache', data => {
+    const cache = data.analysisCache || {};
+    cache[ticketId] = { data: result, timestamp: Date.now() };
+    chrome.storage.local.set({ analysisCache: cache }, resolve);
+  }));
 }
+
 function getCachedAnalysis(ticketId) {
-  return new Promise(resolve => chrome.storage.local.get(['analysisCache', 'settings'], data => { const cached = data.analysisCache?.[ticketId]; const maxAge = data.settings?.maxCacheAge || CACHE_DURATION; resolve(cached && Date.now() - cached.timestamp < maxAge ? cached.data : null); }));
+  return new Promise(resolve => chrome.storage.local.get(['analysisCache', 'settings'], data => {
+    const cached = data.analysisCache?.[ticketId];
+    const maxAge = data.settings?.maxCacheAge || CACHE_DURATION;
+    resolve(cached && Date.now() - cached.timestamp < maxAge ? cached.data : null);
+  }));
 }
+
 setInterval(checkBackendHealth, 5 * 60 * 1000);

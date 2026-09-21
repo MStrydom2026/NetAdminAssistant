@@ -2,7 +2,15 @@ const apiUrl = 'http://127.0.0.1:3000';
 
 document.addEventListener('DOMContentLoaded', updateBackendStatus);
 async function updateBackendStatus() {
-  const status = document.getElementById('backendStatus');
-  try { const response = await fetch(`${apiUrl}/health`); const data = await response.json(); status.textContent = response.ok ? `✅ Backend connected · ${data.aiProvider || 'AI provider'} ready` : `⚠️ ${data.aiMessage || 'Backend unhealthy'}`; status.className = `status-indicator ${response.ok ? 'healthy' : 'error'}`; }
-  catch { status.textContent = `❌ Backend unavailable at ${apiUrl}`; status.className = 'status-indicator error'; }
+  const statusDiv = document.getElementById('backendStatus');
+  if (!statusDiv) return;
+  try {
+    let response = await fetch(`${apiUrl}/health`);
+    let data;
+    if (response.ok) data = await response.json();
+    else { response = await fetch(`${apiUrl}/`); data = await response.json(); }
+    if (!response.ok || data.status !== 'ok' && data.status !== 'healthy') throw new Error('Backend unavailable');
+    statusDiv.textContent = `✅ Backend connected${data.model ? ` · ${data.model}` : ''}`;
+    statusDiv.className = 'status-indicator healthy';
+  } catch { statusDiv.textContent = `❌ Backend unavailable at ${apiUrl}`; statusDiv.className = 'status-indicator error'; }
 }
